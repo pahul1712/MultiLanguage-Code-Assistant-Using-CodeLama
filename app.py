@@ -1,6 +1,7 @@
 import requests
 import json
 import gradio as gr
+import speech_recognition as sr
 
 url = "http://localhost:11434/api/generate"
 
@@ -10,7 +11,27 @@ headers={
 
 history = []
 
-def generate_response(prompt):
+
+# Function to transcribe speech to text
+def transcribe_audio(audio_path):
+    recognizer = sr.Recognizer()
+    try:
+        with sr.AudioFile(audio_path) as source:
+            audio_data = recognizer.record(source)
+            text = recognizer.recognize_google(audio_data)
+            return text
+    except Exception as e:
+        return f"(Could not recognize speech: {e})"
+
+
+
+# Generating Model Response
+def generate_response(prompt,audio_file=None):
+    if audio_file is not None:
+        spoken_text = transcribe_audio(audio_file)
+        prompt = f"{prompt}\nUser (voice): {spoken_text}"
+
+
     history.append(prompt)
     final_prompt = "\n".join(history)
 
@@ -49,17 +70,18 @@ body {
 # Gradio Interface
 interface=gr.Interface(
     fn=generate_response,
-    inputs=gr.Textbox(lines=4,placeholder='Enter your prompt'),
-    outputs=gr.Textbox(lines=15,label="Output"),
+    inputs=[gr.Textbox(lines=4,placeholder='Enter your prompt'),gr.Audio(sources="microphone", type="filepath")],
+    outputs=gr.Textbox(lines=15,label="Output",autoscroll=True),
     title="MasterCoder Chat",
-    description="Ask your Ollama model anything. Responses stream live!",
+    description="Ask your local Ollama model by typing or speaking — live streamed responses!",
     theme="soft",
     examples=[
-        ["Write a Python function for binary search"],
-        ["Explain recursion with code"],
-        ["Generate SQL query to find employees earning above average salary"]
+        ["Write a Python function for binary search",None],
+        ["Explain recursion with code",None],
+        ["Generate SQL query to find employees earning above average salary",None]
     ],
-    css=css
+    css=css,
+    
 )
 
-interface.launch(share=False)
+interface.launch(share=True)
