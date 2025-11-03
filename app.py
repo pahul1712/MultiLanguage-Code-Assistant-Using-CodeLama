@@ -21,7 +21,6 @@ def generate_response(prompt):
         
     }
     
-
     with requests.post(url, headers=headers, data=json.dumps(data), stream=True) as response:
         if response.status_code == 200:
             full_reply = ""
@@ -55,6 +54,11 @@ interface=gr.Interface(
     title="MasterCoder Chat",
     description="Ask your Ollama model anything. Responses stream live!",
     theme="soft",
+    examples=[
+        ["Write a Python function for binary search"],
+        ["Explain recursion with code"],
+        ["Generate SQL query to find employees earning above average salary"]
+    ],
     css=css
 )
 
